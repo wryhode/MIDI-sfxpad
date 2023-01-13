@@ -72,8 +72,12 @@ while True:
                     try:
                         if use_output:
                             midioutputdevice.write_short(144,int(key),3)
-                        sound = pygame.mixer.Sound(audiopath+keymap[key])
-                        sound.play()
+                        try:
+                            sound = pygame.mixer.Sound(audiopath+keymap[key])
+                            sound.play()
+                        except FileNotFoundError:
+                            print(f"Error! Couldn't locate audio file {keymap[key]}")
+                        
                     except KeyError:
                         pass
                 else:
@@ -86,6 +90,9 @@ while True:
     except KeyboardInterrupt:
         mididevice.close()
         if use_output:
+            for i in range(127):
+                if use_output:
+                    midioutputdevice.write_short(144,i,0)
             midioutputdevice.close()
         print("Exit!")
         exit()
