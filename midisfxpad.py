@@ -18,31 +18,40 @@ pygame.mixer.init()
 pygame.midi.init()
 
 
-
 numdevices = pygame.midi.get_count()
 for device in range(numdevices):
     print("ID:" + str(device) + " " + str(pygame.midi.get_device_info(device)[1]))
 
 print("Select a MIDI (input) device by typing in it's ID")
-deviceid = int(input(">"))
-mididevice = pygame.midi.Input(deviceid)
+deviceid = -1
+while deviceid == -1:
+    deviceid = int(input(">"))
+    try:
+        mididevice = pygame.midi.Input(deviceid)
+    except pygame.midi.MidiException:
+        print("That's not an input port! Please select another one.")
+        deviceid = -1
+
 
 print("Select a MIDI (output) device by typing in it's ID (to not send output, type -1)")
-deviceid = int(input(">"))
-use_output = False
-if deviceid > -1:
-    use_output = True
-    midioutputdevice = pygame.midi.Output(14)
-    for i in range(127):
-        midioutputdevice.write_short(144,i,0)
-
-print("Succesfully initiated MIDI device!")
+deviceid = -2
+while deviceid == -2:
+    deviceid = int(input(">"))
+    use_output = False
+    if deviceid > -1:
+        use_output = True
+        try:
+            midioutputdevice = pygame.midi.Output(14)
+            for i in range(127):
+                midioutputdevice.write_short(144,i,0)
+        except pygame.midi.MidiException:
+            print("That's not an output port! Please select another one.")
+            deviceid = -2
+        
 
 audiopath = "./audio/"
-audiofiles = os.listdir(audiopath)
 
 print("Loading keymap")
-
 keymapfile = open("./keymap.json","r")
 keymap = json.loads(keymapfile.read())
 
