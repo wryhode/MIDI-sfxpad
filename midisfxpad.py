@@ -18,6 +18,14 @@ pygame.mixer.init()
 pygame.midi.init()
 
 
+def update_keymap():
+    for i in range(16,127):
+        if use_output:
+            if str(i) in keymap[str(page)].keys():
+                midioutputdevice.write_short(144,i,1)
+            else:
+                midioutputdevice.write_short(144,i,0)
+
 numdevices = pygame.midi.get_count()
 for device in range(numdevices):
     print("ID:" + str(device) + " " + str(pygame.midi.get_device_info(device)[1]))
@@ -55,12 +63,16 @@ print("Loading keymap")
 keymapfile = open("./keymap.json","r")
 keymap = json.loads(keymapfile.read())
 
-for i in range(127):
+for i in range(16,127):
     if use_output:
-        if str(i) in keymap.keys():
+        if str(i) in keymap["0"].keys():
             midioutputdevice.write_short(144,i,1)
+midioutputdevice.write_short(144,0,2)
 
 print("Started succesfully!")
+
+page = 0
+pages = 8
 
 while True:
     try:
@@ -68,24 +80,61 @@ while True:
             data = mididevice.read(1)
             if data[0][0][0] == 144: # Key is pulsed
                 key = str(data[0][0][1])
-                if data[0][0][2] > 0: # Key is pressed down 
-                    try:
-                        if use_output:
-                            midioutputdevice.write_short(144,int(key),3)
+                if int(key) > 15:
+                    if data[0][0][2] > 0: # Key is pressed down 
                         try:
-                            sound = pygame.mixer.Sound(audiopath+keymap[key])
-                            sound.play()
-                        except FileNotFoundError:
-                            print(f"Error! Couldn't locate audio file {keymap[key]}")
-                        
-                    except KeyError:
-                        pass
+                            if use_output:
+                                midioutputdevice.write_short(144,int(key),3)
+                            try:
+                                sound = pygame.mixer.Sound(audiopath+keymap[str(page)][key])
+                                sound.play()
+                            except FileNotFoundError:
+                                print(f"Error! Couldn't locate audio file {keymap[str(page)][key]}")
+                            
+                        except KeyError:
+                            pass
+                    else:
+                        if use_output:
+                            if key in keymap[str(page)].keys():
+                                midioutputdevice.write_short(144,int(key),1)
+                            else:
+                                midioutputdevice.write_short(144,int(key),0)
                 else:
-                    if use_output:
-                        if key in keymap.keys():
-                            midioutputdevice.write_short(144,int(key),1)
-                        else:
-                            midioutputdevice.write_short(144,int(key),0)
+                    prevpage = page
+                    page = data[0][0][1]
+                    try:
+                        update_keymap()
+                    except KeyError:            
+                        page = prevpage
+                    midioutputdevice.write_short(144,page,2)
+                    if prevpage != page:
+                            midioutputdevice.write_short(144,prevpage,0)
+
+            elif data[0][0][0] == 176:
+                if data[0][0][1] == 104:
+                    prevpage = page
+                    if page > 0:
+                        page -= 1
+                    try:
+                        update_keymap()
+                    except KeyError:
+                        page -= 1
+                    midioutputdevice.write_short(144,page,2)
+                    if prevpage != page:
+                            midioutputdevice.write_short(144,prevpage,0)
+                    
+                elif data[0][0][1] == 105:
+                    prevpage = page
+                    if page < pages:
+                        page += 1
+                        try:
+                            update_keymap()
+                        except KeyError:
+                            page -= 1
+                        midioutputdevice.write_short(144,page,2)
+                        if prevpage != page:
+                            midioutputdevice.write_short(144,prevpage,0)
+
             #time.sleep(0.1)
     except KeyboardInterrupt:
         mididevice.close()

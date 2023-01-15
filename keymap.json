@@ -1,7 +1,12 @@
 {
     "these_are_just_examples":"please_remove_this_line_before_use",
-    "112":"bruh.mp3",
-    "113":"android notif.mp3",
-    "114":"araara.mp3",
-    "115":"nokiaarabic.mp3"
+    "0":{
+        "112":"bruh.mp3",
+        "113":"android notif.mp3",
+        "114":"araara.mp3",
+        "115":"nokiaarabic.mp3"
+    },
+    "1":{
+        "51":"goofyahh.mp3"
+    }
 }
