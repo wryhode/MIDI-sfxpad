@@ -100,40 +100,43 @@ while True:
                             else:
                                 midioutputdevice.write_short(144,int(key),0)
                 else:
-                    prevpage = page
-                    page = data[0][0][1]
-                    try:
-                        update_keymap()
-                    except KeyError:            
-                        page = prevpage
-                    midioutputdevice.write_short(144,page,2)
-                    if prevpage != page:
-                            midioutputdevice.write_short(144,prevpage,0)
+                    if data[0][0][2] > 0:
+                        prevpage = page
+                        page = data[0][0][1]
+                        try:
+                            update_keymap()
+                        except KeyError:            
+                            page = prevpage
+                        midioutputdevice.write_short(144,page,2)
+                        if prevpage != page:
+                                midioutputdevice.write_short(144,prevpage,0)
 
             elif data[0][0][0] == 176:
                 if data[0][0][1] == 104:
-                    prevpage = page
-                    if page > 0:
-                        page -= 1
-                    try:
-                        update_keymap()
-                    except KeyError:
-                        page -= 1
-                    midioutputdevice.write_short(144,page,2)
-                    if prevpage != page:
-                            midioutputdevice.write_short(144,prevpage,0)
-                    
-                elif data[0][0][1] == 105:
-                    prevpage = page
-                    if page < pages:
-                        page += 1
+                    if data[0][0][2] > 0:
+                        prevpage = page
+                        if page > 0:
+                            page -= 1
                         try:
                             update_keymap()
                         except KeyError:
                             page -= 1
                         midioutputdevice.write_short(144,page,2)
                         if prevpage != page:
-                            midioutputdevice.write_short(144,prevpage,0)
+                                midioutputdevice.write_short(144,prevpage,0)
+                    
+                elif data[0][0][1] == 105:
+                    if data[0][0][2] > 0:
+                        prevpage = page
+                        if page < pages:
+                            page += 1
+                            try:
+                                update_keymap()
+                            except KeyError:
+                                page -= 1
+                            midioutputdevice.write_short(144,page,2)
+                            if prevpage != page:
+                                midioutputdevice.write_short(144,prevpage,0)
 
             #time.sleep(0.1)
     except KeyboardInterrupt:
